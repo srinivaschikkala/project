@@ -6,15 +6,9 @@ from app.core.auth import get_current_user
 
 from mysql.connector import Error
 from fastapi import Request
-from os import environ
 
 router = APIRouter()
-
-
-AWS_S3_KEY = environ.get("AWS_S3_KEY")
-AWS_S3_SECRET = environ.get("AWS_S3_SECRET")
-AWS_BUCKET_NAME = environ.get("AWS_BUCKET_NAME")
-AWS_S3_REGION = environ.get("AWS_S3_REGION")
+from dotenv import load_dotenv
 
 
 # Get records
