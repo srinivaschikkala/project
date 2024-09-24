@@ -1,4 +1,4 @@
-from fastapi import  Depends, HTTPException,APIRouter
+from fastapi import  Depends, HTTPException,APIRouter,Request
 from pydantic import BaseModel, EmailStr
 import random
 import redis
@@ -8,7 +8,7 @@ from enum import Enum
 from pydantic import BaseModel, EmailStr, constr
 from twilio.rest import Client
 from typing import Optional
-from app.core.sql import create_item,get_db
+from app.core.sql import create_item,get_db,get_item
 from app.core.auth import get_password_hash
 from os import environ
 router = APIRouter()
@@ -33,9 +33,13 @@ TWILIO_PHONE_NUMBER = environ.get("TWILIO_PHONE_NUMBER")
 # Initialize Twilio client
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
+class OTPType(str, Enum):
+    SIGNUP = "signup"
+    LOGIN = "login"
+
 class OTPMethod(str, Enum):
-    email = "email"
-    sms = "sms"
+    EMAIL = "email"
+    SMS = "sms"
 
 class OTPRequestPayload(BaseModel):
     email: EmailStr
@@ -100,25 +104,29 @@ def send_mobile_otp(phone_number,otp):
 
 
 
-@router.post("/signup/request-otp/")
-async def request_otp(otp_method:OTPMethod,data:OTPRequestPayload):
+
+
+@router.post("/{otp_type}/request-otp/")
+async def request_otp(otp_method:OTPMethod,otp_type:OTPType,data:OTPRequestPayload):
     # Generate OTP
     otp = random.randint(100000, 999999)
      # Logic to send the OTP based on the selected method
-    if otp_method == OTPMethod.email:
+    if otp_method == OTPMethod.EMAIL:
         email_request = send_email_otp(data.email,otp)
         return email_request
-    if otp_method == OTPMethod.sms:
+    if otp_method == OTPMethod.SMS:
         sms_request = send_mobile_otp(data.phone_number,otp)
         return sms_request
 
 
 
-@router.post("/signup/verify-otp/")
-async def verify_otp_method(otp_method:OTPMethod,verify_request: OTPVerifyPayload,db=Depends(get_db)):
+@router.post("/{otp_type}/verify-otp/")
+async def verify_otp_method(request:Request,otp_method:OTPMethod,otp_type:OTPType,verify_request: OTPVerifyPayload):
     # Get the OTP from Redis
-   
-    if otp_method == OTPMethod.email:
+    
+    application = request.headers.get("app_name")
+    db=get_db(application)
+    if otp_method == OTPMethod.EMAIL:
         key = verify_request.user.email
         stored_otp = redis_client.get(key)
         
@@ -127,17 +135,19 @@ async def verify_otp_method(otp_method:OTPMethod,verify_request: OTPVerifyPayloa
 
         elif int(stored_otp) != verify_request.otp:
             raise HTTPException(status_code=400, detail="Invalid OTP")
-
+        
+        # db_status = get_item(query=f"select email from useers where email = '{key}'",db=db)
+        # print(db_status)
         # OTP is correct, proceed to registration logic here
         # Optionally delete the OTP after successful verification
         redis_client.delete(key)
-        data = dict(verify_request.user)
+        # data = dict(verify_request.user)
         
-        data['password'] = get_password_hash(data['password'])
-        create_item(payload= data,table_name="users",db=db)
+        # data['password'] = get_password_hash(data['password'])
+        # create_item(payload= data,table_name="users",db=db)
     
         return {"detail": "OTP verified, registration successful"}
-    elif otp_method == OTPMethod.sms:
+    elif otp_method == OTPMethod.SMS:
         stored_otp = redis_client.get(verify_request.user.phone_number)
 
         if stored_otp is None:
@@ -148,10 +158,6 @@ async def verify_otp_method(otp_method:OTPMethod,verify_request: OTPVerifyPayloa
 
         # Delete OTP after successful verification
         redis_client.delete(verify_request.user.phone_number)
-        data = dict(verify_request.user)
-        data['password'] = get_password_hash(data['password'])
-
-        create_item(payload= data,table_name="users",db=db)
 
         return {"detail": "OTP verified successfully"}
 
