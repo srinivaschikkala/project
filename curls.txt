@@ -1,0 +1,86 @@
+#### Generate Token 
+
+curl --location 'http://127.0.0.1:8000/token' \
+--header 'accept: application/json' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--header 'app_name: app1' \
+--data-urlencode 'grant_type=password' \
+--data-urlencode 'username=srinivas' \
+--data-urlencode 'password=password' \
+--data-urlencode 'scope=' \
+--data-urlencode 'client_id=string' \
+--data-urlencode 'client_secret=string'
+
+
+#### token/refresh 
+
+curl --location 'http://127.0.0.1:8000/token/refresh?refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3Jpbml2YXMiLCJleHAiOjE3Mjk3MDEwMDB9.kKtZpfeqt73lbaWLDl6MsxWVf_qIRD10BgFYRL26nvM' \
+--header 'accept: application/json' \
+--header 'Content-Type: application/x-www-form-urlencoded' \
+--header 'app_name: app1'
+
+
+#### Get records 
+
+curl --location 'http://127.0.0.1:8000/db/users' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3Jpbml2YXMiLCJleHAiOjQzMjA5MDk3Nzd9.eGOZ31vYP2SzFeF7YDJvO7N2hbIYf7mKAndmffXIsHE' \
+--header 'app_name: app1'
+
+
+#### Get record
+
+curl --location 'http://127.0.0.1:8000/db/users/9' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3Jpbml2YXMiLCJleHAiOjQzMjA5MDk3Nzd9.eGOZ31vYP2SzFeF7YDJvO7N2hbIYf7mKAndmffXIsHE' \
+--header 'app_name: app1'
+
+
+#### Insert record
+
+curl --location 'http://127.0.0.1:8000/db/users' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3Jpbml2YXMiLCJleHAiOjQzMjA5MDk3Nzd9.eGOZ31vYP2SzFeF7YDJvO7N2hbIYf7mKAndmffXIsHE' \
+--header 'app_name: app1' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+         
+            "first_name": "srinu",
+            "last_name": "vas",
+            "username": "raju",
+            "email": "raju@gmail.com",
+            "password": "$2b$12$0rFFWxZpoLMIaPIG6O5oCOK5Ao.w1Z96cFgE9VpfVrQOb01DD6MBy",
+            "phone_number": "8977070458"
+           
+        }'
+
+#### Upadete record 
+
+curl --location --request PUT 'http://127.0.0.1:8000/db/users/7' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3Jpbml2YXMiLCJleHAiOjQzMjA5MDk3Nzd9.eGOZ31vYP2SzFeF7YDJvO7N2hbIYf7mKAndmffXIsHE' \
+--header 'app_name: app1' \
+--header 'Content-Type: application/json' \
+--data-raw '{ "first_name": "srinu",
+            "last_name": "vas",
+            "username": "srinivas",
+            "email": "srinivaschikkala211@gmail.com",
+            "password": "$2b$12$0rFFWxZpoLMIaPIG6O5oCOK5Ao.w1Z96cFgE9VpfVrQOb01DD6MBy",
+            "phone_number": "8977770428"}'
+
+
+#### Otp sent Email
+
+curl --location 'http://127.0.0.1:8000/signup/request-otp/?otp_method=email' \
+--header 'accept: application/json' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "email": "srinivaschikkala211@gmail.com",
+  "phone_number": "string"
+}'
+
+#### Otp sent Mobile
+
+curl --location 'http://127.0.0.1:8000/signup/request-otp/?otp_method=sms' \
+--header 'accept: application/json' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "email": "",
+  "phone_number": "+918977770458"
+}'
